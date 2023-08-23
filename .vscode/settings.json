@@ -1,3 +1,4 @@
 {
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "craftos-pc.executablePath.windows": "C:\\Program Files\\CraftOS-PC\\CraftOS-PC_console.exe"
 }
