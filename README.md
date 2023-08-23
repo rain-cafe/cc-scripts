@@ -10,6 +10,4 @@ wget run https://raw.githubusercontent.com/rain-cafe/cc-scripts/main/download.lu
 
 ### Development
 
-```sh
-gitget rain-cafe cc-scripts main /cc-scripts
-```
+- https://remote.craftos-pc.cc/
