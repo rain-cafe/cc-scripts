@@ -1,4 +1,4 @@
-local navigate = require "/libraries/apis/navigate"
+local betterTurtle = require "/rc.apis.better-turtle"
 
 local function printUsage()
     print("Usage:")
@@ -16,12 +16,13 @@ if not turtle then
     return
 end
 
-local gpsX, gpsY, gpsZ = gps.locate()
+local _, gpsY, _ = betterTurtle.navigate.coords()
 
-local debug = true
 local x = tonumber(arg[1])
 local y = #tArgs == 3 and tonumber(arg[2]) or gpsY
 local z = #tArgs == 2 and tonumber(arg[2]) or tonumber(arg[3])
 
-navigate.goto(x, y, z)
-navigate.face(navigate.DIRECTIONS.NORTH)
+print("Navigating to:", x, y, z)
+
+betterTurtle.navigate.go(x, y, z)
+betterTurtle.navigate.face(betterTurtle.navigate.DIRECTIONS.NORTH)
