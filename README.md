@@ -4,8 +4,10 @@ Just a collection of scripts I've developed that utilize [CC: Tweaked](https://t
 
 ### Usage
 
+Clone via [gitget](https://www.computercraft.info/forums2/index.php?/topic/17387-gitget-version-2-release/)
+
 ```sh
-wget run https://raw.githubusercontent.com/rain-cafe/cc-scripts/main/download.lua
+gitget rain-cafe cc-scripts main
 ```
 
 ### Development
