@@ -1,11 +1,11 @@
-fs.makeDir("./libraries/apis")
-fs.makeDir("./libraries/utils")
-fs.makeDir("./libraries/programs")
+fs.makeDir("/libraries/apis")
+fs.makeDir("/libraries/utils")
+fs.makeDir("/programs")
+fs.delete("/libraries/")
+fs.delete("/programs/")
 
 local function download(fileName)
-    fs.delete("./rain-scripts/" .. fileName)
-    shell.run("wget", "https://raw.githubusercontent.com/rain-cafe/cc-scripts/main/" .. fileName,
-        "./rain-scripts/" .. fileName)
+    shell.run("wget", "https://raw.githubusercontent.com/rain-cafe/cc-scripts/main/" .. fileName, "/" .. fileName)
 end
 
 local function alias(alias, fileName)
