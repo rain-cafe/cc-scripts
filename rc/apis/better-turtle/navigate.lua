@@ -1,14 +1,13 @@
-local turn = require "/libraries/utils/turn"
-local table = require "/libraries/utils/table"
+local turn = require "/rc.utils.turn"
 
-local navigate = {}
+local api = {}
 
 local DIRECTIONS = {
     UNKNOWN = -1,
     NORTH = 0,
     EAST = 1,
     SOUTH = 2,
-    WEST = 3,
+    WEST = 3
 }
 
 local MODES = {
@@ -23,54 +22,52 @@ local MODES = {
 --  2: We're facing "south"
 --  3: We're facing "west"
 local _direction = -1
-local _coords = nil
+local _x = nil
+local _y = nil
+local _z = nil
 local _mode = nil
 
-function navigate.coords()
-    if _coords == nil then
-        local x, y, z = gps.locate()
+function api.coords()
+    if _x == nil or _y == nil or _z == nil then
+        local x, y, z = gps.locate(5)
 
         if x == nil then
             print("GPS not setup, running in turtle space...")
-            _coords = {
-                x = 0,
-                y = 0,
-                z = 0
-            }
+            _x = 0
+            _y = 0
+            _z = 0
 
             _mode = MODES.TURTLE_RELATIVE
         else
-            _coords = {
-                x = x,
-                y = y,
-                z = z
-            }
+            _x = math.floor(x)
+            _y = math.floor(y)
+            _z = math.floor(z)
 
             _mode = MODES.WORLD_RELATIVE
         end
     end
 
-    return table.clone(_coords)
+    return _x, _y, _z
 end
 
-function navigate.mode()
+function api.mode()
     if _mode == nil then
-        navigate.coords()
+        api.coords()
     end
 
     return _mode
 end
 
-function navigate.direction()
+function api.direction()
     if _direction == -1 then
         if turtle.getFuelLevel() == 0 then
             printError("Please refuel your turtle!")
             return
         end
 
-        local coords = navigate.coords()
+        local x, _, z = api.coords()
 
-        if navigate.mode() == MODES.TURTLE_RELATIVE then
+        if api.mode() == MODES.TURTLE_RELATIVE then
             _direction = DIRECTIONS.NORTH
         else
             turtle.turnRight()
@@ -85,12 +82,12 @@ function navigate.direction()
 
             turtle.back()
 
-            local newX, newY, newZ = gps.locate()
+            local newX, _, newZ = gps.locate()
 
             turtle.forward()
 
-            local deltaX = newX - coords.x
-            local deltaZ = newZ - coords.z
+            local deltaX = newX - x
+            local deltaZ = newZ - z
 
             if deltaZ < 0 then
                 _direction = DIRECTIONS.SOUTH
@@ -109,8 +106,8 @@ function navigate.direction()
     return _direction
 end
 
-function navigate.humanizeDirection(dir)
-    dir = dir or navigate.direction()
+function api.humanizeDirection(dir)
+    dir = dir or api.direction()
 
     if dir == DIRECTIONS.UNKNOWN then
         return "unknown"
@@ -127,8 +124,8 @@ function navigate.humanizeDirection(dir)
     return nil
 end
 
-function navigate.dehumanizeDirection(dir)
-    dir = dir or navigate.direction()
+function api.dehumanizeDirection(dir)
+    dir = dir or api.direction()
 
     if dir == "unknown" then
         return DIRECTIONS.UNKNOWN
@@ -145,29 +142,29 @@ function navigate.dehumanizeDirection(dir)
     return nil
 end
 
-function navigate.turnRight()
-    local dir = navigate.direction()
+function api.turnRight()
+    local dir = api.direction()
 
     turtle.turnRight()
 
     _direction = dir >= 3 and 0 or dir + 1
 end
 
-function navigate.turnLeft()
-    local dir = navigate.direction()
+function api.turnLeft()
+    local dir = api.direction()
 
     turtle.turnLeft()
 
     _direction = dir <= 0 and 3 or dir - 1
 end
 
-function navigate.turnAround()
-    navigate.turnRight()
-    navigate.turnRight()
+function api.turnAround()
+    api.turnRight()
+    api.turnRight()
 end
 
-function navigate.turnDistance(dir)
-    local diff = dir - navigate.direction()
+function api.turnDistance(dir)
+    local diff = dir - api.direction()
     if diff < 0 then
         diff = diff + 4
     end
@@ -180,30 +177,30 @@ function navigate.turnDistance(dir)
 end
 
 -- north, south, east, or west
-function navigate.face(dir)
-    local side = turn.side(navigate.direction(), dir)
+function api.face(dir)
+    local side = turn.side(api.direction(), dir)
 
-    while navigate.direction() ~= dir do
+    while api.direction() ~= dir do
         if side == 1 then
-            navigate.turnRight()
+            api.turnRight()
         else
-            navigate.turnLeft()
+            api.turnLeft()
         end
     end
 end
 
-function navigate.forward()
-    local dir = navigate.direction()
+function api.forward()
+    local dir = api.direction()
 
     if turtle.forward() then
         if dir == DIRECTIONS.NORTH then
-            _coords.z = _coords.z - 1
+            _z = _z - 1
         elseif dir == DIRECTIONS.SOUTH then
-            _coords.z = _coords.z + 1
+            _z = _z + 1
         elseif dir == DIRECTIONS.EAST then
-            _coords.x = _coords.x + 1
+            _x = _x + 1
         elseif dir == DIRECTIONS.WEST then
-            _coords.x = _coords.x - 1
+            _x = _x - 1
         end
 
         return true
@@ -212,18 +209,18 @@ function navigate.forward()
     return false
 end
 
-function navigate.back()
-    local dir = navigate.direction()
+function api.back()
+    local dir = api.direction()
 
     if turtle.back() then
         if dir == DIRECTIONS.NORTH then
-            _coords.z = _coords.z - 1
+            _z = _z - 1
         elseif dir == DIRECTIONS.SOUTH then
-            _coords.z = _coords.z + 1
+            _z = _z + 1
         elseif dir == DIRECTIONS.EAST then
-            _coords.x = _coords.x - 1
+            _x = _x - 1
         elseif dir == DIRECTIONS.WEST then
-            _coords.x = _coords.x + 1
+            _x = _x + 1
         end
 
         return true
@@ -232,11 +229,11 @@ function navigate.back()
     return false
 end
 
-function navigate.up()
-    navigate.coords()
+function api.up()
+    api.coords()
 
     if turtle.up() then
-        _coords.y = _coords.y + 1
+        _y = _y + 1
 
         return true
     end
@@ -244,11 +241,11 @@ function navigate.up()
     return false
 end
 
-function navigate.down()
-    navigate.coords()
+function api.down()
+    api.coords()
 
     if turtle.down() then
-        _coords.y = _coords.y - 1
+        _y = _y - 1
 
         return true
     end
@@ -256,79 +253,79 @@ function navigate.down()
     return false
 end
 
-function navigate.spinny(counter)
+function api.spinny(counter)
     if counter then
-        navigate.face(DIRECTIONS.WEST)
-        navigate.face(DIRECTIONS.SOUTH)
-        navigate.face(DIRECTIONS.EAST)
-        navigate.face(DIRECTIONS.NORTH)
+        api.face(DIRECTIONS.WEST)
+        api.face(DIRECTIONS.SOUTH)
+        api.face(DIRECTIONS.EAST)
+        api.face(DIRECTIONS.NORTH)
     else
-        navigate.face(DIRECTIONS.EAST)
-        navigate.face(DIRECTIONS.SOUTH)
-        navigate.face(DIRECTIONS.WEST)
-        navigate.face(DIRECTIONS.NORTH)
+        api.face(DIRECTIONS.EAST)
+        api.face(DIRECTIONS.SOUTH)
+        api.face(DIRECTIONS.WEST)
+        api.face(DIRECTIONS.NORTH)
     end
 end
 
-function navigate.goto(x, y, z)
+function api.go(targetX, targetY, targetZ)
     -- TODO: Try to make this more efficient, maybe caching?
-    local coords = navigate.coords()
+    local x, y, z = api.coords()
 
-    if navigate.mode() == MODES.TURTLE_RELATIVE then
-        printError("Go-to is unable to function without a GPS!")
+    if api.mode() == MODES.TURTLE_RELATIVE then
+        printError("Go is unable to function without a GPS!")
         return
     end
 
-    local deltaX = x - coords.x
-    local deltaY = y - coords.y
-    local deltaZ = z - coords.z
+    local deltaX = targetX - x
+    local deltaY = targetY - y
+    local deltaZ = targetZ - z
 
     if deltaX > 0 then
-        navigate.face(DIRECTIONS.EAST)
+        api.face(DIRECTIONS.EAST)
     elseif deltaX < 0 then
-        navigate.face(DIRECTIONS.WEST)
+        api.face(DIRECTIONS.WEST)
     end
 
-    for i = 1, math.abs(deltaX) do
+    for _ = 1, math.abs(deltaX) do
         if turtle.detect() then
             turtle.dig()
         end
 
-        navigate.forward()
+        api.forward()
     end
 
     if deltaZ > 0 then
-        navigate.face(DIRECTIONS.SOUTH)
+        api.face(DIRECTIONS.SOUTH)
     elseif deltaZ < 0 then
-        navigate.face(DIRECTIONS.NORTH)
+        api.face(DIRECTIONS.NORTH)
     end
 
-    for i = 1, math.abs(deltaZ) do
+    for _ = 1, math.abs(deltaZ) do
         if turtle.detect() then
             turtle.dig()
         end
 
-        navigate.forward()
+        api.forward()
     end
 
-    for i = 1, math.abs(deltaY) do
+    for _ = 1, math.abs(deltaY) do
         if deltaY > 0 then
             if turtle.detectUp() then
                 turtle.digUp()
             end
 
-            navigate.up()
+            api.up()
         elseif deltaY < 0 then
             if turtle.detectDown() then
                 turtle.digDown()
             end
 
-            navigate.down()
+            api.down()
         end
     end
 end
 
-navigate.DIRECTIONS = DIRECTIONS
-navigate.MODES = MODES
+api.DIRECTIONS = DIRECTIONS
+api.MODES = MODES
 
-return navigate
+return api

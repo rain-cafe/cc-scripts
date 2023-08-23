@@ -1,7 +1,3 @@
-if not turtle then
-    printError("[slots]: The 'slots' api is only usable by turtles!")
-end
-
 local api = {}
 local _slots = nil
 
@@ -47,6 +43,27 @@ function api.findBy(predicate)
     end
 
     return api.slot(index)
+end
+
+local _priorSelection = nil
+function api.select(index)
+    local priorSelection = turtle.getSelectedSlot()
+
+    if turtle.select(index) then
+        _priorSelection = priorSelection
+        return true
+    end
+
+    return false
+end
+
+function api.revertSelect()
+    if _priorSelection ~= nil and turtle.select(_priorSelection) then
+        _priorSelection = nil
+        return true
+    end
+
+    return false
 end
 
 return api
