@@ -1,3 +1,4 @@
+require "/rc.settings"
 local turn = require "/rc.utils.turn"
 
 local api = {}
@@ -27,24 +28,26 @@ local _y = nil
 local _z = nil
 local _mode = nil
 
+local function getGPSCoords()
+    -- If we aren't running in GPS mode...
+    if BETTER_TURTLE_SETTINGS.NO_GPS or not peripheral.find("modem") then
+        _mode = MODES.TURTLE_RELATIVE
+
+        return 0, 0, 0
+    end
+
+    local x, y, z = gps.locate(2)
+
+    if x == nil then
+        error("[gps.locate]: Please setup your GPS correctly or edit NO_GPS in /rc/settings.lua to true to bypass...", 0)
+    end
+
+    return math.floor(x), math.floor(y), math.floor(z)
+end
+
 function api.coords()
     if _x == nil or _y == nil or _z == nil then
-        local x, y, z = gps.locate(2)
-
-        if x == nil then
-            print("GPS not setup, running in turtle space...")
-            _x = 0
-            _y = 0
-            _z = 0
-
-            _mode = MODES.TURTLE_RELATIVE
-        else
-            _x = math.floor(x)
-            _y = math.floor(y)
-            _z = math.floor(z)
-
-            _mode = MODES.WORLD_RELATIVE
-        end
+        _x, _y, _z = getGPSCoords()
     end
 
     return _x, _y, _z
@@ -268,7 +271,6 @@ function api.spinny(counter)
 end
 
 function api.go(targetX, targetY, targetZ)
-    -- TODO: Try to make this more efficient, maybe caching?
     local x, y, z = api.coords()
 
     local deltaX = targetX - x
