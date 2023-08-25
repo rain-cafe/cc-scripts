@@ -29,7 +29,7 @@ local _mode = nil
 
 function api.coords()
     if _x == nil or _y == nil or _z == nil then
-        local x, y, z = gps.locate(5)
+        local x, y, z = gps.locate(2)
 
         if x == nil then
             print("GPS not setup, running in turtle space...")
@@ -270,11 +270,6 @@ end
 function api.go(targetX, targetY, targetZ)
     -- TODO: Try to make this more efficient, maybe caching?
     local x, y, z = api.coords()
-
-    if api.mode() == MODES.TURTLE_RELATIVE then
-        printError("Go is unable to function without a GPS!")
-        return
-    end
 
     local deltaX = targetX - x
     local deltaY = targetY - y
